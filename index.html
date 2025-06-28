@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DollarBoost | Full Classic App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+  <style>
+    * {box-sizing:border-box;scroll-behavior:smooth;}
+    body {margin:0;font-family:'Poppins',sans-serif;background:#fff;color:#333;overflow-x:hidden;}
+    header {position:fixed;top:0;width:100%;background:#0f0f0f;color:white;padding:15px;text-align:center;z-index:1000;}
+    nav {position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;background:#0f0f0f;padding:10px 0;z-index:1000;}
+    nav button {background:none;border:none;color:white;font-size:14px;cursor:pointer;}
+    .page {display:none;min-height:100vh;padding:80px 20px 80px;transition:0.4s ease;}
+    .show {display:block;}
+    h1, h2 {color:#0f0f0f;}
+    .card {background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 10px rgba(0,0,0,0.08);margin:20px 0;text-align:center;}
+    input, button {padding:12px 20px;margin:10px;width:100%;max-width:300px;border-radius:8px;border:1px solid #ccc;font-size:1rem;}
+    button {background:#28a745;color:white;border:none;cursor:pointer;transition:0.3s;}
+    button:hover {background:#218838;}
+    canvas {width:100%;height:60vh;border:1px solid #ccc;border-radius:8px;display:block;margin:0 auto;}
+    video {width:100%;max-width:360px;border-radius:12px;margin-bottom:15px;}
+    img.profile-pic {width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid #28a745;margin:10px auto;display:block;}
+    table {width:100%;margin-top:20px;border-collapse:collapse;}
+    th, td {padding:10px;border:1px solid #ccc;text-align:left;}
+    th {background:#0f0f0f;color:white;}
+  </style>
+</head>
+<body>
+  <header>DollarBoost App</header>  <!-- Navigation -->  <nav>
+    <button onclick="show('home')">Home</button>
+    <button onclick="show('market')">Market</button>
+    <button onclick="show('charts')">Charts</button>
+    <button onclick="show('wallet')">Wallet</button>
+    <button onclick="show('profile')">Profile</button>
+    <button onclick="show('admin')">Admin</button>
+  </nav>  <!-- Pages -->  <div id="home" class="page show">
+    <h2>Trading & Tutorial Videos</h2>
+    <video src="https://www.w3schools.com/html/mov_bbb.mp4" controls></video>
+    <video src="https://www.w3schools.com/html/movie.mp4" controls></video>
+  </div>  <div id="market" class="page">
+    <h2>Buy & Resell eBooks</h2>
+    <div class="card">
+      <h3>Expert Option Guide</h3>
+      <a href="https://paystack.com/buy/expert-option-guide-mfznfs" target="_blank"><button>Buy $1</button></a>
+    </div>
+    <div class="card">
+      <h3>Money Behind the Red Door</h3>
+      <a href="https://paystack.com/buy/money-behind-the-red-door-xplwmc" target="_blank"><button>Buy $1</button></a>
+    </div>
+  </div>  <div id="charts" class="page">
+    <h2>Live Demand Chart</h2>
+    <canvas id="chartCanvas"></canvas>
+  </div>  <div id="wallet" class="page">
+    <h2>Wallet & Withdraw</h2>
+    <p>Balance: $<span id="balance">0.00</span></p>
+    <input id="walletTo" placeholder="Bank/Crypto wallet">
+    <input id="amount" type="number" placeholder="Min $3">
+    <button onclick="withdraw()">Withdraw</button>
+  </div>  <div id="profile" class="page">
+    <h2>User Profile</h2>
+    <img id="profilePic" src="https://via.placeholder.com/100" class="profile-pic">
+    <input type="file" accept="image/*" onchange="uploadPic(event)">
+    <input id="userName" placeholder="Name">
+    <input id="userEmail" placeholder="Email">
+    <button onclick="saveUser()">Save</button>
+    <p id="refMsg"></p>
+  </div>  <div id="admin" class="page">
+    <h2>Admin Panel</h2>
+    <input id="adminPass" type="password" placeholder="Enter admin password">
+    <button onclick="loginAdmin()">Login</button>
+    <div id="adminTable" style="display:none">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Amount</th><th>To</th></tr></thead>
+        <tbody id="withdrawTable"></tbody>
+      </table>
+    </div>
+  </div>  <script>
+    let t = 0;
+    const ctx = document.getElementById('chartCanvas').getContext('2d');
+    function drawChart() {
+      ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+      ctx.beginPath();
+      for (let x = 0; x < chartCanvas.width; x++) {
+        const y = Math.sin((x + t) * 0.05) * 20 + chartCanvas.height / 2;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#28a745';
+      ctx.stroke();
+      t++;
+    }
+    setInterval(drawChart, 100);
+
+    function show(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+      document.getElementById(id).classList.add('show');
+      if(id === 'wallet') updateBalance();
+    }
+
+    function saveUser() {
+      const name = document.getElementById('userName').value.trim();
+      const email = document.getElementById('userEmail').value.trim();
+      const pic = document.getElementById('profilePic').src;
+      if (!name || !email) return alert('Fill all fields');
+      const user = { name, email, balance: 0, referrals: 0, pic };
+      localStorage.setItem('user', JSON.stringify(user));
+      document.getElementById('refMsg').innerText = `Referral Link: ${location.origin}?ref=${encodeURIComponent(name)}`;
+    }
+
+    function updateBalance() {
+      const user = JSON.parse(localStorage.getItem('user')) || {};
+      document.getElementById('balance').innerText = (user.balance || 0).toFixed(2);
+      if (user.pic) document.getElementById('profilePic').src = user.pic;
+      if (user.name) document.getElementById('userName').value = user.name;
+      if (user.email) document.getElementById('userEmail').value = user.email;
+    }
+
+    function withdraw() {
+      const amt = parseFloat(document.getElementById('amount').value);
+      const to = document.getElementById('walletTo').value.trim();
+      const user = JSON.parse(localStorage.getItem('user')) || {};
+      if (amt < 3 || amt > (user.balance || 0)) return alert('Invalid withdrawal');
+      user.balance -= amt;
+      const recs = JSON.parse(localStorage.getItem('withdrawals') || '[]');
+      recs.push({ name: user.name, email: user.email, amount: amt, to });
+      localStorage.setItem('withdrawals', JSON.stringify(recs));
+      localStorage.setItem('user', JSON.stringify(user));
+      alert('Withdrawal submitted!');
+      updateBalance();
+    }
+
+    function loginAdmin() {
+      const pass = document.getElementById('adminPass').value;
+      if (pass !== 'boost2025') return alert('Wrong password');
+      document.getElementById('adminTable').style.display = 'block';
+      const data = JSON.parse(localStorage.getItem('withdrawals') || '[]');
+      document.getElementById('withdrawTable').innerHTML = data.map(x => `<tr><td>${x.name}</td><td>${x.email}</td><td>$${x.amount}</td><td>${x.to}</td></tr>`).join('');
+    }
+
+    function uploadPic(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('profilePic').src = evt.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    window.onload = updateBalance;
+  </script></body>
+</html>
